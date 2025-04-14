@@ -1,0 +1,12 @@
+{
+    "Crisan3": {
+        "password": "Ali:Cris7",
+        "name": "Cristiano",
+        "surname": "Andrade"
+    },
+    "Crisan7": {
+        "password": "scrypt:32768:8:1$cPNqJqOKRu3719Dq$7680e4a81a534f76ba9131e805c97e4576c5c3ff5983c24796d5762f17d4f212dcfce89fe0a26a829af32d7bccbb0b2137798e79914d2186341b9c2b5e4f06b7",
+        "name": "Cristiano",
+        "surname": "Andrade"
+    }
+}
