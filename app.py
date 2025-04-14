@@ -1,6 +1,8 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 import json, os
+import csv
 from werkzeug.security import generate_password_hash, check_password_hash
+from datetime import datetime, timedelta
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'
@@ -17,15 +19,83 @@ def save_users(users):
     with open(USER_FILE, 'w') as f:
         json.dump(users, f)
 
-@app.route('/')
+def get_week_dates(start_date):
+    start_date = datetime.strptime(start_date, '%Y-%m-%d')
+    monday = start_date - timedelta(days=start_date.weekday())
+    return [(monday + timedelta(days=i)).strftime('%Y-%m-%d') for i in range(7)]
+
+def load_weekly_hours_from_csv(username, start_date):
+    week_dates = get_week_dates(start_date)
+    hours_by_date = {date: 0 for date in week_dates}
+
+    try:
+        with open('time_reports.csv', newline='') as csvfile:
+            reader = csv.DictReader(csvfile)
+            for row in reader:
+                if row['username'] == username and row['date'] in week_dates:
+                    hours_by_date[row['date']] += float(row['hours'])
+    except FileNotFoundError:
+        pass
+
+    return hours_by_date
+
+def load_weekly_projects_from_csv(username, start_date):
+    week_dates = get_week_dates(start_date)
+    projects_by_date = {date: [] for date in week_dates}
+
+    try:
+        with open('time_reports.csv', newline='') as csvfile:
+            reader = csv.DictReader(csvfile)
+            for row in reader:
+                if (
+                    row['username'] == username
+                    and row['date'] in week_dates
+                ):
+                    project = row.get('project', 'Unknown')
+                    task = row.get('task', 'No Task')
+                    hours = row.get('hours', '0')
+                    entry = f"{project} - {task}: {hours}h"
+                    projects_by_date[row['date']].append(entry)
+    except FileNotFoundError:
+        pass
+
+    return projects_by_date
+
+@app.route('/', methods=['GET', 'POST'])
 def home():
-    if 'username' in session:
-        users = load_users()
-        username = session['username']
-        name = users[username].get('name', '')
-        surname = users[username].get('surname', '')
-        return render_template('home.html', name=name, surname=surname)
-    return redirect(url_for('login'))
+    if 'username' not in session:
+        return redirect(url_for('login'))
+
+    username = session['username']
+    users = load_users()
+    name = users[username].get('name', '')
+    surname = users[username].get('surname', '')
+
+    # Get the current date or the selected date (from form submission)
+    if request.method == 'POST':
+        project = request.form['project']
+        task = request.form['task']
+        hours = request.form['hours']
+        date = request.form['date']
+
+        # Save the data to the CSV
+        with open('time_reports.csv', mode='a', newline='') as csvfile:
+            writer = csv.writer(csvfile)
+            writer.writerow([username, date, project, task, hours])
+
+    # Load weekly data for the specific week (e.g., last week or this week)
+    week_start_date = request.args.get('week_start_date', datetime.today().strftime('%Y-%m-%d'))
+    weekly_hours = load_weekly_hours_from_csv(username, week_start_date)
+    weekly_projects = load_weekly_projects_from_csv(username, week_start_date)
+
+    return render_template(
+        'home.html',
+        name=name,
+        surname=surname,
+        weekly_hours=weekly_hours,
+        weekly_projects=weekly_projects,
+        week_start_date=week_start_date
+    )
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
