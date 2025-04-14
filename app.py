@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, session, flash
+from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
 import json, os
 import csv
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -60,6 +60,19 @@ def load_weekly_projects_from_csv(username, start_date):
         pass
 
     return projects_by_date
+
+@app.route('/tasks/<project_name>')
+def get_tasks_for_project(project_name):
+    tasks = []
+    try:
+        filepath = os.path.join('project_tasks', f'{project_name}.csv')
+        with open(filepath, newline='') as csvfile:
+            reader = csv.reader(csvfile)
+            tasks = [row[0] for row in reader if row]
+    except FileNotFoundError:
+        tasks = []
+    return jsonify(tasks)
+
 
 @app.route('/', methods=['GET', 'POST'])
 def home():
