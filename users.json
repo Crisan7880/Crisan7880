@@ -8,5 +8,10 @@
         "password": "scrypt:32768:8:1$cPNqJqOKRu3719Dq$7680e4a81a534f76ba9131e805c97e4576c5c3ff5983c24796d5762f17d4f212dcfce89fe0a26a829af32d7bccbb0b2137798e79914d2186341b9c2b5e4f06b7",
         "name": "Cristiano",
         "surname": "Andrade"
+    },
+    "Crisan1": {
+        "password": "scrypt:32768:8:1$APLwLsRx0Yd5CUPY$46a1e26c1ef2e068a475a356c44f29710ca36c70f4e4658c12601b597619ce21e9a26d399ad38be8196789e4de4f19dce693a94309187ea3960dc022d01ea401",
+        "name": "Cristiano",
+        "surname": "Andrade"
     }
 }
